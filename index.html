@@ -1,0 +1,18 @@
+<html>
+<head>
+	<title>Tech Community Rocks!</title>
+	<link rel="Stylesheet" href="css/base.css" />
+</head>
+<body>
+	<h1>Tech Community Rocks!</h1>
+	<table id="UserGroups" />
+	<table id="Events" />
+	<script type="text/javascript" src="data/Groups.js"></script>
+	<script type="text/javascript" src="data/Events.js"></script>
+	<script type="text/javascript" src="js/SimpleRender.js"></script>
+	<script type="text/javascript">
+		MakeHTMLTableFromArray(Groups, document.getElementById("UserGroups"));
+		MakeHTMLTableFromArray(Events, document.getElementById("Events"));
+	</script>
+</body>
+</html>

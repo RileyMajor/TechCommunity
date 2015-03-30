@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
 	<title>Tech Community Rocks!</title>
@@ -5,14 +6,17 @@
 </head>
 <body>
 	<h1>Tech Community Rocks!</h1>
-	<table id="UserGroups" />
-	<table id="Events" />
+	<h2>User Groups</h2>
+	<table id="UserGroups"></table>
+	<h2>Events</h2>
+	<table id="Events"></table>
 	<script type="text/javascript" src="data/Groups.js"></script>
 	<script type="text/javascript" src="data/Events.js"></script>
+	<script type="text/javascript" src="js/Sort.js"></script>
 	<script type="text/javascript" src="js/SimpleRender.js"></script>
 	<script type="text/javascript">
-		MakeHTMLTableFromArray(Groups, document.getElementById("UserGroups"));
-		MakeHTMLTableFromArray(Events, document.getElementById("Events"));
+		MakeHTMLTableFromArray(Groups.sort(dynamicSort("Name")), document.getElementById("UserGroups"));
+		MakeHTMLTableFromArray(Events.sort(dynamicSort("Name")), document.getElementById("Events"));
 	</script>
 </body>
 </html>

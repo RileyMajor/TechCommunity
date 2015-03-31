@@ -7,99 +7,75 @@
 <body>
 	<h1>Tech Community Rocks!</h1>
 	<h2>User Groups</h2>
-	<table id="UserGroups"></table>
-	<div>
-		<input type="button" onclick="ToggleJSON('UserGroupJSONDiv','UserGroupJSON',Groups);" value="Toggle JSON View" />
-		<div id="UserGroupJSONDiv" class="Hidden" >
-			<textarea id="UserGroupJSON" width="80" height="30"></textarea>
-			<input type="button" onclick="JSONHandler('Groups','Refresh');" value="Refresh JSON From Table" />
-			<input type="button" onclick="JSONHandler('Groups','Revert');" value="Reset JSON" />
-			<input type="button" onclick="JSONHandler('Groups','Save')" value="Save JSON To Table" />
-		</div>
-	</div>
+	<table id="Groups"></table>
+	<div id="GroupsFeatures"></div>
 	<h2>Events</h2>
 	<table id="Events"></table>
-	<script type="text/javascript" src="data/Groups.js"></script>
-	<script type="text/javascript" src="data/Events.js"></script>
+	<div id="EventsFeatures"</div>
+	
+	<!-- Generic Functions -->
 	<script type="text/javascript" src="js/Sort.js"></script>
 	<script type="text/javascript" src="js/HTMLEncode.js"></script>
+	<script type="text/javascript" src="js/ToggleClass.js"></script>
 	<script type="text/javascript" src="js/SimpleRender.js"></script>
+	
+	<!-- Initialization Function -->
+	<script type="text/javascript" src="js/TechInfoInit.js"></script>
+	
+	<!-- Data Population  -->
+	<script type="text/javascript" src="Data/Events.js"></script>
+	<script type="text/javascript" src="Data/Groups.js"></script>
+	
+	<!-- Page Logic -->
 	<script type="text/javascript">
-		var OrigGroups = Groups;
-		var OrigEvents = Events;
-		function JSONHandler(ListType, Action)
+
+		// ********************** Features
+		
+		function JSONHandler(TechInfo, ListType, Action, TextAreaID, TableID)
 		{
 			var Data;
-			if (ListType === "Groups")
-			{
-				TextAreaID = 'UserGroupJSON';
-				if (Action === "Revert")
-				{
-					Data = OrigGroups;
-				}
-				else
-				{
-					Data = Groups;
-				}
-				TableID = 'UserGroups';
-			}
 			if (Action === "Save")
 			{
-				// for some reason, despite being passed by reference,
-				// the Data parameter won't be set, so we have to
-				// have it set via the return parameter
-				Data = UpdateJSON(TextAreaID, Data, TableID);
+				// Get the new JSON data from the TextArea.
+				// Save the new JSON to the TechInfo object.
+				// Update the Table with the new JSON data.
+				Data = LoadJSONFromTextArea(TextAreaID);
+				if (Data)
+				{
+					TechInfo.SetProp(ListType, Data);
+					DrawTable(Data, "Name", TableID);
+				}
 			}
 			else
 			{
-				PopJSON(TextAreaID, Data, TableID);
+				Data = TechInfo.GetProp(ListType, (Action === "Revert"));
+				LoadTextAreaFromJSON(TextAreaID, Data);
 			}
-			// for some reason, despite Data being set to them, the global
-			// variables aren't affected by changes to Data, so set them here forcibly.
-			if (ListType === "Groups")
-			{
-				Groups = Data;
-			} 
 		}
-		function GetCurrentEvents()
+
+		function ToggleJSON(TechInfo, JSONDivID, TextAreaID, ListType, TableID)
 		{
-			return Events;
-		}
-		function ToggleClass(ID, ClassName)
-		{
-			var IsVisible = false;
-			var obj = document.getElementById(ID);
-			var ClassRegex = new RegExp("(?:^|\\s)" + ClassName + "(?!\\S)", "g");
-			if (obj.className.match(ClassRegex))
-			{
-				obj.className = obj.className.replace(ClassRegex, "");
-				IsVisible = true;
-			}
-			else
-			{
-				obj.className += " " + ClassName;
-				IsVisible = false;
-			}
-			return IsVisible;
-		}
-		function ToggleJSON (JSONDivID, TextAreaID, Data)
-		{
-			var IsVisible = ToggleClass(JSONDivID, "Hidden");
+			var IsVisible = !ToggleClass(JSONDivID, "Hidden");
 			if (IsVisible)
 			{
-				PopJSON (TextAreaID, Data);
+				JSONHandler(TechInfo, ListType, "Refresh", TextAreaID, TableID);
 			}
 		}
-		function PopJSON (TextAreaID, Data)
+
+		// ********************** Generic Functions
+
+		function LoadTextAreaFromJSON(TextAreaID, Data)
 		{
 			document.getElementById(TextAreaID).value = JSON.stringify(Data);
 		}
-		function UpdateJSON (TextAreaID, Data, TableID)
+
+		function LoadJSONFromTextArea(TextAreaID)
 		{
-			Data = JSON.parse(document.getElementById(TextAreaID).value);
-			DrawTable (Data, "Name", TableID);
-			return Data;
+			return JSON.parse(document.getElementById(TextAreaID).value);
 		}
+
+		// ********************** Page Construction
+
 		function DrawTable(Data, SortCol, TableID)
 		{
 			MakeHTMLTableFromArray
@@ -110,8 +86,32 @@
 				htmlEncode
 			);
 		}
-		DrawTable(Groups, "Name", "UserGroups");
-		DrawTable(Events, "Name", "Events");
+		// Sorry, future coders, for all of these nested quation marks and string manipulation.
+		function MakeHTMLJSONButtons(ID, ListType)
+		{
+			var obj = document.getElementById(ID);
+			var DivID = ListType + "JSONDiv";
+			var TextAreaID = ListType + "JSONTextArea";
+			var TableID = ListType;
+			function MakeHTMLJSONButton(ListType, DivID, TextAreaID, TableID, ButtonFunction, ButtonText)
+			{
+				return "" +
+					"<input type=\"button\" onclick=\"JSONHandler(TechInfo, '" + ListType + "', '" + ButtonFunction + "', '" + TextAreaID + "', '" + TableID + "');\" value=\"" + ButtonText + "\" />"
+					
+			}
+			obj.innerHTML = 
+				"<input type=\"button\" onclick=\"ToggleJSON(TechInfo, '" + DivID + "', '" + TextAreaID + "', '" + ListType + "', '" + TableID + "');\" value=\"Toggle JSON View\" />" +
+				"<div id=\"" + DivID + "\" class=\"Hidden\" >" +
+				"<textarea id=\"" + TextAreaID + "\"></textarea>" +
+				MakeHTMLJSONButton(ListType, DivID, TextAreaID, TableID, "Refresh", "Refresh JSON From Table") +
+				MakeHTMLJSONButton(ListType, DivID, TextAreaID, TableID, "Revert", "Reset JSON") +
+				MakeHTMLJSONButton(ListType, DivID, TextAreaID, TableID, "Save", "Save JSON To Table") +
+				"</div>"
+		}
+		DrawTable(TechInfo.GetProp("Groups"), "Name", "Groups");
+		MakeHTMLJSONButtons("GroupsFeatures","Groups");
+		DrawTable(TechInfo.GetProp("Events"), "Name", "Events");
+		MakeHTMLJSONButtons("EventsFeatures","Events");
 	</script>
 </body>
 </html>

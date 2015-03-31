@@ -7,16 +7,111 @@
 <body>
 	<h1>Tech Community Rocks!</h1>
 	<h2>User Groups</h2>
-	<table id="UserGroups"></table>
+	<table id="Groups"></table>
+	<div id="GroupsFeatures"></div>
 	<h2>Events</h2>
 	<table id="Events"></table>
-	<script type="text/javascript" src="data/Groups.js"></script>
-	<script type="text/javascript" src="data/Events.js"></script>
+	<div id="EventsFeatures"</div>
+	
+	<!-- Generic Functions -->
 	<script type="text/javascript" src="js/Sort.js"></script>
+	<script type="text/javascript" src="js/HTMLEncode.js"></script>
+	<script type="text/javascript" src="js/ToggleClass.js"></script>
 	<script type="text/javascript" src="js/SimpleRender.js"></script>
+	
+	<!-- Initialization Function -->
+	<script type="text/javascript" src="js/TechInfoInit.js"></script>
+	
+	<!-- Data Population  -->
+	<script type="text/javascript" src="Data/Events.js"></script>
+	<script type="text/javascript" src="Data/Groups.js"></script>
+	
+	<!-- Page Logic -->
 	<script type="text/javascript">
-		MakeHTMLTableFromArray(Groups.sort(dynamicSort("Name")), document.getElementById("UserGroups"));
-		MakeHTMLTableFromArray(Events.sort(dynamicSort("Name")), document.getElementById("Events"));
+
+		// ********************** Features
+		
+		function JSONHandler(TechInfo, ListType, Action, TextAreaID, TableID)
+		{
+			var Data;
+			if (Action === "Save")
+			{
+				// Get the new JSON data from the TextArea.
+				// Save the new JSON to the TechInfo object.
+				// Update the Table with the new JSON data.
+				Data = LoadJSONFromTextArea(TextAreaID);
+				if (Data)
+				{
+					TechInfo.SetProp(ListType, Data);
+					DrawTable(Data, "Name", TableID);
+				}
+			}
+			else
+			{
+				Data = TechInfo.GetProp(ListType, (Action === "Revert"));
+				LoadTextAreaFromJSON(TextAreaID, Data);
+			}
+		}
+
+		function ToggleJSON(TechInfo, JSONDivID, TextAreaID, ListType, TableID)
+		{
+			var IsVisible = !ToggleClass(JSONDivID, "Hidden");
+			if (IsVisible)
+			{
+				JSONHandler(TechInfo, ListType, "Refresh", TextAreaID, TableID);
+			}
+		}
+
+		// ********************** Generic Functions
+
+		function LoadTextAreaFromJSON(TextAreaID, Data)
+		{
+			document.getElementById(TextAreaID).value = JSON.stringify(Data);
+		}
+
+		function LoadJSONFromTextArea(TextAreaID)
+		{
+			return JSON.parse(document.getElementById(TextAreaID).value);
+		}
+
+		// ********************** Page Construction
+
+		function DrawTable(Data, SortCol, TableID)
+		{
+			MakeHTMLTableFromArray
+			(
+				Data.sort(dynamicSort(SortCol)),
+				document.getElementById(TableID),
+				true, // make header
+				htmlEncode
+			);
+		}
+		// Sorry, future coders, for all of these nested quation marks and string manipulation.
+		function MakeHTMLJSONButtons(ID, ListType)
+		{
+			var obj = document.getElementById(ID);
+			var DivID = ListType + "JSONDiv";
+			var TextAreaID = ListType + "JSONTextArea";
+			var TableID = ListType;
+			function MakeHTMLJSONButton(ListType, DivID, TextAreaID, TableID, ButtonFunction, ButtonText)
+			{
+				return "" +
+					"<input type=\"button\" onclick=\"JSONHandler(TechInfo, '" + ListType + "', '" + ButtonFunction + "', '" + TextAreaID + "', '" + TableID + "');\" value=\"" + ButtonText + "\" />"
+					
+			}
+			obj.innerHTML = 
+				"<input type=\"button\" onclick=\"ToggleJSON(TechInfo, '" + DivID + "', '" + TextAreaID + "', '" + ListType + "', '" + TableID + "');\" value=\"Toggle JSON View\" />" +
+				"<div id=\"" + DivID + "\" class=\"Hidden\" >" +
+				"<textarea id=\"" + TextAreaID + "\"></textarea>" +
+				MakeHTMLJSONButton(ListType, DivID, TextAreaID, TableID, "Refresh", "Refresh JSON From Table") +
+				MakeHTMLJSONButton(ListType, DivID, TextAreaID, TableID, "Revert", "Reset JSON") +
+				MakeHTMLJSONButton(ListType, DivID, TextAreaID, TableID, "Save", "Save JSON To Table") +
+				"</div>"
+		}
+		DrawTable(TechInfo.GetProp("Groups"), "Name", "Groups");
+		MakeHTMLJSONButtons("GroupsFeatures","Groups");
+		DrawTable(TechInfo.GetProp("Events"), "Name", "Events");
+		MakeHTMLJSONButtons("EventsFeatures","Events");
 	</script>
 </body>
 </html>
